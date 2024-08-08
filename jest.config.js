@@ -1,5 +1,5 @@
 module.exports = {
     preset: "ts-jest",
-    testEnvironment: "node",
+    testEnvironment: "jest-environment-jsdom",
     testPathIgnorePatterns: ["/node_modules/", "/cypress/", "/test.tsx$"]
-  };
+};

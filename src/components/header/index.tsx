@@ -1,8 +1,9 @@
-import React, {useState, useContext} from 'react';
-import {AuthContext} from '../../contexts/auth';
+import React, { useState, useContext } from 'react';
+import { AuthContext } from '../../contexts/auth';
 import styled from 'styled-components';
 
-const HeaderContainer: React.FC = styled.div`
+// No need to use React.FC here
+const HeaderContainer = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
@@ -21,20 +22,14 @@ interface HeaderProps {
 }
 
 export default () => {
-
     const [siteName, _] = useState("qa.code-quiz.dev");
-    const {user} = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
 
-    return(
+    return (
         <HeaderContainer>
             <div>
-            {
-                user?
-                    `Hello ${user.name}`
-                    :
-                    `${siteName}`
-            }
+                {user ? `Hello ${user.name}` : `${siteName}`}
             </div>
         </HeaderContainer>
-    )
-}
+    );
+};

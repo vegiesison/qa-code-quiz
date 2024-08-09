@@ -1,6 +1,6 @@
-import React, {Dispatch, SetStateAction, useContext} from 'react';
+import React, { Dispatch, SetStateAction, useContext, useState } from 'react';
 import styled from 'styled-components';
-import {AuthContext} from '../../contexts/auth';
+import { AuthContext } from '../../contexts/auth';
 
 const LoginContainer = styled.div`
     display: flex;
@@ -8,7 +8,7 @@ const LoginContainer = styled.div`
     align-items: center;
     justify-content: center;
     font-family: 'Courier New', Courier, monospace;
-    background-color:  rgba(247, 247,247, 0.4);
+    background-color: rgba(247, 247, 247, 0.4);
     width: 40%;
     height: 85%;
 `;
@@ -33,7 +33,7 @@ const Button = styled.button`
     background-color: #048ABF;
     border: none;
     margin-top: 5px;
-    margin-bottom: 20px
+    margin-bottom: 20px;
     border-radius: 15px;
     width: 50%;
     height: 7%;
@@ -42,30 +42,60 @@ const Button = styled.button`
     font-weight: light;
     color: white;
     transition: background-color 0.1s ease-in;
-    outline:none;
+    outline: none;
     :active {
         outline: none;
         background-color: #F54458;
     }
+`;
 
+const ErrorMessage = styled.div`
+    color: #F54458; // Red color for the error message
+    font-family: 'Courier New', Courier, monospace;
+    margin-top: 10px;
+    font-size: 1em;
 `;
 
 type LoginProps = {
     setLoggedInUser: Dispatch<SetStateAction<string | null>>,
 }
 
-
-export default () => {
-
+const Login: React.FC<LoginProps> = ({ setLoggedInUser }) => {
     const [username, setUsername] = React.useState<string | null>(null);
     const [password, setPassword] = React.useState<string | null>(null);
-    const {login} = useContext(AuthContext);
+    const [error, setError] = React.useState<string | null>(null); // State for error messages
+    const { login } = useContext(AuthContext);
 
-    return(
-    <LoginContainer>
-        <Input placeholder="Enter Username" onChange={(e: any) => {setUsername(e.target.value)}}/>
-        <Input placeholder="password" onChange={(e: any) => {setPassword(e.target.value)}}/>
-        <Button onClick={() => login(username, password)}>LOGIN</Button>
-        <div>If you do not have an account, contact an admin</div>
-    </LoginContainer>)
+    const handleLogin = async () => {
+        try {
+            const result = await login(username, password);
+            if (result.success) {
+                setError(null); // Clear any previous error message
+                setLoggedInUser(username); // Update state or redirect on success
+            } else {
+                setError(result.message || 'Login failed'); // Set error message if login fails
+            }
+        } catch (error) {
+            setError('Invalid username or password'); // Handle unexpected errors
+        }
+    };
+
+    return (
+        <LoginContainer>
+            <Input
+                placeholder="Enter Username"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+            />
+            <Input
+                type="password"
+                placeholder="password"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+            />
+            <Button onClick={handleLogin}>LOGIN</Button>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+            <div>If you do not have an account, contact an admin</div>
+        </LoginContainer>
+    );
 }
+
+export default Login;

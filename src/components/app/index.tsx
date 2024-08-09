@@ -1,5 +1,5 @@
 import styled, { createGlobalStyle } from 'styled-components';
-import React, {useState, useContext} from 'react';
+import React, { useState, useContext } from 'react';
 import Header from '../header';
 import Account from '../account';
 import Login from '../login';
@@ -35,21 +35,21 @@ const GlobalBackground = createGlobalStyle`
 `;
 
 export default () => {
-    const {user} = useContext(AuthContext)
-    if(user) {
-        return(
+    const { user } = useContext(AuthContext)
+    if (user) {
+        return (
             <StyledDiv>
-                <GlobalBackground/>
-                <Header/>
-                <Account/>
+                <GlobalBackground />
+                <Header />
+                <Account />
             </StyledDiv>
         )
     } else {
-        return(
+        return (
             <StyledDiv>
-                <GlobalBackground/>
-                <Header/>
-                <Login/>
+                <GlobalBackground />
+                <Header />
+                <Login />
             </StyledDiv>
         )
     }

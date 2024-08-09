@@ -1,5 +1,5 @@
-import React, {useContext} from 'react';
-import {AuthContext} from '../../contexts/auth';
+import React, { useContext } from 'react';
+import { AuthContext } from '../../contexts/auth';
 import styled from 'styled-components';
 
 type HeaderProps = {
@@ -45,9 +45,9 @@ const Button = styled.button`
 
 `;
 export default () => {
-    const {user, logout} = useContext(AuthContext);
+    const { user, logout } = useContext(AuthContext);
 
-    return(<AccountContainer>
+    return (<AccountContainer>
         <Row>
             <div>Name</div>
             <div>{user.name}</div>
@@ -64,7 +64,7 @@ export default () => {
             <div>Favourite Number</div>
             <div>{user.favouriteNumber}</div>
         </Row>
-        <Button onClick={()=>{logout()}}>LOGOUT</Button>
+        <Button onClick={() => { logout() }}>LOGOUT</Button>
 
     </AccountContainer>)
 }

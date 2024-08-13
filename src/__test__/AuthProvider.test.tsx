@@ -2,9 +2,8 @@ import React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
 import { act } from 'react-dom/test-utils';
 import { AuthProvider, AuthContext } from '../contexts/auth';
-import { Accounts } from '../types/accounts';
+import accounts from '../../storage/account.json'; // Import the mocked accounts data
 
-// Mock accounts.json with the provided content
 jest.mock('../../storage/account.json', () => ({
     SomeUser_name: {
         name: 'SomeName',
@@ -14,6 +13,7 @@ jest.mock('../../storage/account.json', () => ({
         favouriteNumber: 'BN<1234>'
     },
     dummytree: {
+        name: 'SomeName2',
         password: 'test1',
         favouriteFruit: 'Mango',
         favouriteMovie: 'V for Vendetta',
@@ -30,20 +30,15 @@ describe('AuthProvider', () => {
             await result.current.login('SomeUser_name', 'TopSecret1234!');
         });
 
-        expect(result.current.user).toEqual({
-            name: 'SomeName',
-            favouriteFruit: 'some fruit',
-            favouriteMovie: 'The Room',
-            favouriteNumber: 'BN<1234>',
-            password: 'TopSecret1234!',  // Include the password field if it's part of the user object
-        });
+        const { password, ...expectedUser } = accounts.SomeUser_name;
+        expect(result.current.user).toEqual(expectedUser);
     });
 
     it('should reject login with invalid credentials', async () => {
         const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
         const { result } = renderHook(() => React.useContext(AuthContext), { wrapper });
 
-        let error;
+        let error: Error | null = null;
         await act(async () => {
             try {
                 await result.current.login('SomeUser_name', 'wrongPassword');
@@ -52,7 +47,8 @@ describe('AuthProvider', () => {
             }
         });
 
-        expect(error).toBe('INVALID USER');
+        expect(error).not.toBeNull();
+        expect(error!.message).toBe('INVALID USER');
         expect(result.current.user).toBeUndefined();
     });
 
@@ -60,7 +56,7 @@ describe('AuthProvider', () => {
         const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
         const { result } = renderHook(() => React.useContext(AuthContext), { wrapper });
 
-        let error;
+        let error: Error | null = null;
         await act(async () => {
             try {
                 await result.current.login('nonExistingUser', 'somePassword');
@@ -69,7 +65,8 @@ describe('AuthProvider', () => {
             }
         });
 
-        expect(error).toBe('INVALID USER');
+        expect(error).not.toBeNull();
+        expect(error!.message).toBe('INVALID USER');
         expect(result.current.user).toBeUndefined();
     });
 
@@ -82,5 +79,66 @@ describe('AuthProvider', () => {
         });
 
         expect(result.current.user).toBeUndefined();
+    });
+
+    it('should maintain user state across re-renders', async () => {
+        const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
+        const { result, rerender } = renderHook(() => React.useContext(AuthContext), { wrapper });
+
+        await act(async () => {
+            await result.current.login('SomeUser_name', 'TopSecret1234!');
+        });
+
+        rerender();
+
+        const { password, ...expectedUser } = accounts.SomeUser_name;
+        expect(result.current.user).toEqual(expectedUser);
+    });
+
+    it('should handle login with empty username', async () => {
+        const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
+        const { result } = renderHook(() => React.useContext(AuthContext), { wrapper });
+
+        let error: Error | null = null;
+        await act(async () => {
+            try {
+                await result.current.login('', 'somePassword');
+            } catch (e) {
+                error = e;
+            }
+        });
+
+        expect(error).not.toBeNull();
+        expect(error!.message).toBe('INVALID USER');
+        expect(result.current.user).toBeUndefined();
+    });
+
+    it('should handle login with empty password', async () => {
+        const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
+        const { result } = renderHook(() => React.useContext(AuthContext), { wrapper });
+
+        let error: Error | null = null;
+        await act(async () => {
+            try {
+                await result.current.login('SomeUser_name', '');
+            } catch (e) {
+                error = e;
+            }
+        });
+
+        expect(error).not.toBeNull();
+        expect(error!.message).toBe('INVALID USER');
+        expect(result.current.user).toBeUndefined();
+    });
+
+    it('should ensure user object does not include password after login', async () => {
+        const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>;
+        const { result } = renderHook(() => React.useContext(AuthContext), { wrapper });
+
+        await act(async () => {
+            await result.current.login('SomeUser_name', 'TopSecret1234!');
+        });
+
+        expect(result.current.user).not.toHaveProperty('password');
     });
 });

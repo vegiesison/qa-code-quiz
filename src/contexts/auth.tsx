@@ -1,39 +1,36 @@
-import React, { useState } from 'react';
-import accounts from '../../storage/account.json'; // Importing JSON data
-import { Accounts, Account } from '../types/accounts'; // Adjust path as needed
+import React, { createContext, useState } from 'react';
+import accounts from '../../storage/account.json';
 
-// Type assertion to match the expected type
-const typedAccounts: Accounts = accounts;
+interface User {
+    name: string;
+    favouriteFruit: string;
+    favouriteMovie: string;
+    favouriteNumber: string;
+}
 
-interface AuthAPI {
-    user?: {
-        name?: string;
-        favouriteFruit: string;
-        favouriteMovie: string;
-        favouriteNumber: string;
-    };
-    login: (username: string, password: string) => Promise<Account>;
+interface AuthContextType {
+    user: User | undefined;
+    login: (username: string, password: string) => Promise<void>;
     logout: () => void;
 }
 
-const defaultAuthAPI: AuthAPI = {
-    login: () => Promise.reject("Login function is not implemented"), // Default implementation
-    logout: () => { }
-};
+export const AuthContext = createContext<AuthContextType>({
+    user: undefined,
+    login: async () => { },
+    logout: () => { },
+});
 
-const AuthContext = React.createContext<AuthAPI>(defaultAuthAPI);
+export const AuthProvider: React.FC = ({ children }) => {
+    const [user, setUser] = useState<User | undefined>(undefined);
 
-const AuthProvider: React.FC = ({ children }) => {
-    const [user, setUser] = useState<{ name?: string; favouriteFruit: string; favouriteMovie: string; favouriteNumber: string } | undefined>(undefined);
-
-    const login = (username: string, password: string): Promise<Account> => {
-        console.warn({ username, password });
-        const account = typedAccounts[username];
+    const login = async (username: string, password: string) => {
+        console.warn({ username, password }); // Log the credentials for debugging
+        const account = (accounts as Record<string, any>)[username];
         if (account && account.password === password) {
-            setUser(account);
-            return Promise.resolve(account);
+            const { password, ...userWithoutPassword } = account;
+            setUser(userWithoutPassword);
         } else {
-            return Promise.reject("INVALID USER");
+            throw new Error('INVALID USER');
         }
     };
 
@@ -41,17 +38,9 @@ const AuthProvider: React.FC = ({ children }) => {
         setUser(undefined);
     };
 
-    const api: AuthAPI = {
-        user,
-        logout,
-        login
-    };
-
     return (
-        <AuthContext.Provider value={api}>
+        <AuthContext.Provider value={{ user, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
 };
-
-export { AuthContext, AuthProvider };
